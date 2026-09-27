@@ -98,7 +98,7 @@
     var acces = S.clients.filter(function (x) { return x.acces_support_actif; });
     var err24 = S.erreurs.filter(function (e) { return O.joursDepuis(e.created_at) < 1; }).length;
     var nouvelles = S.demandes.filter(function (d) { return d.statut === 'nouvelle'; }).length;
-    var mrr = actifs.reduce(function (t, x) { var p = { essentiel: 5000, organisation: 12000, reseau: 30000 }[x.plan] || 0; return t + p; }, 0);
+    var mrr = actifs.reduce(function (t, x) { var p = { essentiel: 5000, organisation: 10000, reseau: 20000 }[x.plan] || 0; return t + p; }, 0);
 
     var surv = [];
     expires.forEach(function (x) { surv.push(['alerte', '<b>' + esc(x.nom) + '</b> : abonnement expiré depuis ' + Math.abs(joursRestants(x.abonnement_fin)) + ' j', 'Relancer le paiement ou suspendre depuis Clients.']); });
@@ -115,7 +115,7 @@
       '<a class="kpi' + (err24 ? ' alerte' : ' bon') + '" href="#erreurs"><b>' + err24 + '</b><span>erreurs signalées (24 h)</span></a>' +
       '<div class="kpi"><b>' + S.activite.length + '</b><span>actualités publiées (14 j)</span></div>' +
       '<div class="kpi' + (acces.length ? ' attention' : '') + '"><b>' + acces.length + '</b><span>accès support ouverts</span></div>' +
-      '<div class="kpi"><b>' + O.nb(mrr) + '</b><span>FCFA / mois attendus (tarifs proposés)</span></div></div>' +
+      '<div class="kpi"><b>' + O.nb(mrr) + '</b><span>FCFA / mois attendus</span></div></div>' +
       '<div class="g2"><section class="bloc"><h2>Activité des clients · actualités publiées par jour</h2><div class="graph">' + graphique() + '</div></section>' +
       '<section class="bloc"><h2>Services</h2><ul class="services">' +
       '<li><span class="pt ' + (DV.mode === 'demo' ? 'att' : 'ok') + '"></span>Base de données' + '<code>' + (DV.mode === 'demo' ? 'mode démo (navigateur)' : esc(window.MINVA_DEV_CONFIG.SUPABASE_URL)) + '</code></li>' +
