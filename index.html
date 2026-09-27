@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Console Développeur · MinVa</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="favicon.png">
+<meta name="theme-color" content="#14100D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Work+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="console.css">
+</head>
+<body>
+<div id="racine"></div>
+<dialog class="fenetre" id="fenetre" aria-labelledby="fen-titre">
+  <div class="fenetre-tete"><h2 id="fen-titre"></h2><button type="button" class="btn-icone" id="fen-fermer" aria-label="Fermer"></button></div>
+  <div class="fenetre-corps" id="fen-corps"></div>
+  <div class="fenetre-pied" id="fen-pied"></div>
+</dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="outils.js"></script>
+<script src="demo-store.js"></script>
+<script src="api-dev.js"></script>
+<script src="console.js"></script>
+</body>
+</html>
