@@ -159,7 +159,7 @@
       (liste.length ? liste.map(function (x) {
         var j = joursRestants(x.abonnement_fin);
         var fin = x.abonnement_fin ? '<span class="' + (j < 0 ? 'expire' : j <= 15 ? 'bientot' : '') + '">' + new Date(x.abonnement_fin).toLocaleDateString('fr-FR') + (j < 0 ? ' · expiré' : j <= 15 ? ' · ' + j + ' j' : '') + '</span>' : '—';
-        return '<tr class="' + (x.actif ? '' : 'suspendu') + '"><td class="nom"><b>' + esc(x.nom) + '</b><code>/' + esc(x.slug) + ' · ' + esc(x.ville || '') + '</code></td>' +
+        return '<tr class="' + (x.actif ? '' : 'suspendu') + '"><td class="nom"><b>' + esc(x.nom) + '</b><code>' + esc(O.typeDe(x)[1]) + ' · /' + esc(x.slug) + ' · ' + esc(x.ville || '') + '</code></td>' +
           '<td>' + esc(TARIFS[x.plan] || x.plan) + '</td><td class="num">' + fin + '</td><td class="num">' + x.nb_admins + '/3</td>' +
           '<td class="num">' + x.nb_actualites + (x.derniere_actualite ? ' · ' + O.quand(x.derniere_actualite) : '') + '</td>' +
           '<td>' + (x.actif ? (x.statut_verification === 'verifie' ? '<span class="badge b-verifie">' + ico('verifie') + 'Vérifié</span>' : '<span class="badge b-en-cours">En ligne</span>') : '<span class="badge b-neutre">Suspendu</span>') + '</td>' +
@@ -184,8 +184,9 @@
   function formClient(pre) {
     fenetre('Nouveau client',
       '<div class="champ"><label for="n-nom">Nom de l’organisation</label><input id="n-nom" type="text" autocomplete="off" value="' + esc(pre.nom || '') + '"></div>' +
-      '<div class="grille-champs"><div class="champ"><label for="n-sect">Secteur</label><select id="n-sect">' + Object.keys(O.SECTEURS).map(function (k) { return '<option value="' + k + '"' + (pre.secteur === k ? ' selected' : '') + '>' + O.SECTEURS[k].nom + '</option>'; }).join('') + '</select></div>' +
-      '<div class="champ"><label for="n-ville">Ville</label><input id="n-ville" type="text" autocomplete="off" value="' + esc(pre.ville || '') + '"></div></div>' +
+      '<div class="grille-champs"><div class="champ"><label for="n-type">Type de structure</label><select id="n-type">' + O.TYPES_STRUCTURE.map(function (t) { return '<option value="' + t[0] + '"' + (O.typeDe(pre)[0] === t[0] ? ' selected' : '') + '>' + esc(t[1]) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="champ"><label for="n-sect">Secteur</label><select id="n-sect">' + Object.keys(O.SECTEURS).map(function (k) { return '<option value="' + k + '"' + (pre.secteur === k ? ' selected' : '') + '>' + O.SECTEURS[k].nom + '</option>'; }).join('') + '</select></div></div>' +
+      '<div class="champ"><label for="n-ville">Ville</label><input id="n-ville" type="text" autocomplete="off" value="' + esc(pre.ville || '') + '"></div>' +
       '<div class="champ" style="padding:12px 14px;background:var(--fond-neutre);border-radius:6px"><span class="etiquette">Adresse du site, attribuée automatiquement</span><b id="n-apercu" style="word-break:break-all"></b><span class="aide" id="n-regle">D’après le nom de l’organisation.</span></div>' +
       '<div class="grille-champs"><div class="champ"><label for="n-plan">Formule</label><select id="n-plan">' + Object.keys(TARIFS).map(function (k) { return '<option value="' + k + '"' + ((pre.plan || 'essentiel') === k ? ' selected' : '') + '>' + TARIFS[k] + '</option>'; }).join('') + '</select></div>' +
       '<div class="champ"><label for="n-fin">Payé jusqu’au</label><input id="n-fin" type="date" value="' + dansUnAn() + '"></div></div>' +
@@ -208,7 +209,7 @@
     document.getElementById('n-annuler').onclick = function () { fen.close(); };
     document.getElementById('n-ok').onclick = function () {
       var b = this; occupe(b, true, 'Création…');
-      var donnees = { nom: nom.value.trim(), slug: slugActuel(), sigle: O.sigleDe(nom.value), secteur: document.getElementById('n-sect').value, ville: document.getElementById('n-ville').value.trim(),
+      var donnees = { nom: nom.value.trim(), slug: slugActuel(), sigle: O.sigleDe(nom.value), type_structure: document.getElementById('n-type').value, secteur: document.getElementById('n-sect').value, ville: document.getElementById('n-ville').value.trim(),
         plan: document.getElementById('n-plan').value, abonnementFin: document.getElementById('n-fin').value,
         admin: { nom: document.getElementById('n-anom').value.trim(), email: document.getElementById('n-aemail').value.trim(), motDePasse: document.getElementById('n-amdp').value } };
       DV.creerClient(donnees).then(function () {
@@ -223,6 +224,7 @@
   function gerer(x) {
     fenetre(x.nom,
       '<dl class="kv"><dt>Adresse</dt><dd><a href="' + esc(DV.lienSite(x.slug)) + '" target="_blank" rel="noopener">' + esc(DV.lienSite(x.slug)) + '</a></dd><dt>Créé</dt><dd>' + O.dateLongue(x.created_at) + '</dd><dt>Admins</dt><dd>' + x.nb_admins + '/3</dd></dl>' +
+      '<div class="champ"><label for="g-type">Type de structure</label><select id="g-type">' + O.TYPES_STRUCTURE.map(function (t) { return '<option value="' + t[0] + '"' + (O.typeDe(x)[0] === t[0] ? ' selected' : '') + '>' + esc(t[1]) + '</option>'; }).join('') + '</select></div>' +
       '<div class="grille-champs"><div class="champ"><label for="g-plan">Formule</label><select id="g-plan">' + Object.keys(TARIFS).map(function (k) { return '<option value="' + k + '"' + (x.plan === k ? ' selected' : '') + '>' + TARIFS[k] + '</option>'; }).join('') + '</select></div>' +
       '<div class="champ"><label for="g-fin">Payé jusqu’au</label><input id="g-fin" type="date" value="' + (x.abonnement_fin || '') + '"></div></div>' +
       '<label class="case"><input type="checkbox" id="g-verif"' + (x.statut_verification === 'verifie' ? ' checked' : '') + '> Badge « Vérifié par MinVa »</label>' +
@@ -234,7 +236,7 @@
     document.getElementById('g-annuler').onclick = function () { fen.close(); };
     document.getElementById('g-ok').onclick = function () {
       var b = this; occupe(b, true);
-      DV.majClient(x.id, { plan: document.getElementById('g-plan').value, fin: document.getElementById('g-fin').value || null, verif: document.getElementById('g-verif').checked ? 'verifie' : 'en-cours' })
+      DV.majClient(x.id, { type: document.getElementById('g-type').value, plan: document.getElementById('g-plan').value, fin: document.getElementById('g-fin').value || null, verif: document.getElementById('g-verif').checked ? 'verifie' : 'en-cours' })
         .then(rafraichir).then(function () { fen.close(); O.toast('Client mis à jour.'); }).catch(function (e) { occupe(b, false); erreur(e); });
     };
     document.getElementById('g-actif').onclick = function () {
@@ -299,7 +301,7 @@
         var wa = String(d.telephone || '').replace(/[^0-9]/g, '');
         return '<article class="demande"><h3>' + esc(d.nom_organisation) + ' <span class="badge ' + (d.statut === 'nouvelle' ? 'b-avant' : 'b-neutre') + '">' + ST[d.statut] + '</span></h3>' +
           '<p>' + esc(d.responsable) + ' · <span class="num">' + esc(d.telephone) + '</span>' + (d.email ? ' · ' + esc(d.email) : '') + '</p>' +
-          '<p class="meta">' + esc([O.SECTEURS[d.secteur] ? O.SECTEURS[d.secteur].nom : '', d.ville, TARIFS[d.plan]].filter(Boolean).join(' · ')) + ' · reçue ' + O.quand(d.created_at) + '</p>' +
+          '<p class="meta">' + esc([d.type_structure ? O.typeDe(d)[1] : '', O.SECTEURS[d.secteur] ? O.SECTEURS[d.secteur].nom : '', d.ville, TARIFS[d.plan]].filter(Boolean).join(' · ')) + ' · reçue ' + O.quand(d.created_at) + '</p>' +
           (d.message ? '<p>« ' + esc(d.message) + ' »</p>' : '') +
           '<div class="actions">' + (wa ? '<a class="btn btn-secondaire btn-sm" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour ' + d.responsable + ', ici MinVa. Merci pour votre demande pour ' + d.nom_organisation + '.') + '" target="_blank" rel="noopener">' + ico('whatsapp') + 'WhatsApp</a>' : '') +
           (d.statut !== 'convertie' ? '<button type="button" class="btn btn-principal btn-sm" data-conv="' + d.id + '">Créer le client</button>' : '') +
@@ -310,7 +312,7 @@
     z.onclick = function (e) {
       var b = e.target.closest('[data-conv]'); if (!b) return;
       var d = S.demandes.find(function (x) { return x.id === b.dataset.conv; });
-      formClient({ nom: d.nom_organisation, secteur: d.secteur, ville: d.ville, plan: d.plan, responsable: d.responsable, email: d.email, demandeId: d.id });
+      formClient({ nom: d.nom_organisation, type_structure: d.type_structure, secteur: d.secteur, ville: d.ville, plan: d.plan, responsable: d.responsable, email: d.email, demandeId: d.id });
     };
   }
 

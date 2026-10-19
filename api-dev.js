@@ -5,7 +5,9 @@
 // =====================================================================
 (function () {
   var C = window.MINVA_DEV_CONFIG || {};
-  var REEL = !!(C.SUPABASE_URL && C.SUPABASE_ANON_KEY && window.supabase);
+  // ?demo=1 : console de démonstration (données fictives, dans ce navigateur seulement)
+  var DEMO_FORCEE = /[?&]demo=1(&|$)/.test(location.search);
+  var REEL = !DEMO_FORCEE && !!(C.SUPABASE_URL && C.SUPABASE_ANON_KEY && window.supabase);
   var DV = { mode: REEL ? 'reel' : 'demo' };
   DV.lienSite = function (slug) { return new URL((C.URL_MINVA || '../minva/').replace(/\/?$/, '/') + slug, location.href).href; };
 
@@ -31,7 +33,7 @@
       try { var db = garde(); } catch (e) { return ko(e.message); }
       return att(db.organisations.map(function (o) {
         var actus = db.actualites.filter(function (a) { return a.org_id === o.id; });
-        return { id: o.id, slug: o.slug, nom: o.nom, secteur: o.secteur, ville: o.ville, plan: o.plan, abonnement_fin: o.abonnement_fin, actif: o.actif, statut_verification: o.statut_verification,
+        return { id: o.id, slug: o.slug, nom: o.nom, type_structure: o.type_structure || 'association', secteur: o.secteur, ville: o.ville, plan: o.plan, abonnement_fin: o.abonnement_fin, actif: o.actif, statut_verification: o.statut_verification,
           acces_support_actif: D.devAAcces(o), acces_support_corrections: o.acces_support_corrections, acces_support_expire: o.acces_support_expire, created_at: o.created_at,
           nb_admins: db.profils.filter(function (p) { return p.org_id === o.id; }).length, nb_actualites: actus.length,
           derniere_actualite: actus.map(function (a) { return a.created_at; }).sort().pop() || null,
@@ -46,7 +48,7 @@
       if (db.profils.some(function (p) { return p.email.toLowerCase() === b.admin.email.toLowerCase(); })) return ko('Cet email a déjà un compte MinVa');
       if (String(b.admin.motDePasse).length < 8) return ko('Mot de passe : 8 caractères minimum');
       var id = D.uid();
-      db.organisations.push({ id: id, slug: b.slug, nom: b.nom, sigle: b.sigle || '', secteur: b.secteur, ville: b.ville || '', region: b.region || '', annee_creation: null, slogan: '', mission: '', apropos: '', zone: '', langues: '',
+      db.organisations.push({ id: id, slug: b.slug, nom: b.nom, sigle: b.sigle || '', type_structure: b.type_structure || 'association', secteur: b.secteur, ville: b.ville || '', region: b.region || '', annee_creation: null, slogan: '', mission: '', apropos: '', zone: '', langues: '',
         beneficiaires: 0, beneficiaires_label: 'bénéficiaires', membres: 0, theme: b.theme || 'nuit', logo_url: null, couverture_url: null,
         rubriques: { apropos: true, actualites: true, projets: true, besoins: true, galerie: true, documents: true, equipe: true, contact: true }, besoins: [], equipe: [], contact: {},
         dans_annuaire: true, actif: true, statut_verification: 'en-cours', plan: b.plan || 'essentiel', abonnement_fin: b.abonnementFin || null,
@@ -57,7 +59,7 @@
     DV.majClient = function (id, p) {
       try { var db = garde(); } catch (e) { return ko(e.message); }
       var o = db.organisations.find(function (x) { return x.id === id; });
-      if (p.actif != null) o.actif = p.actif; if (p.plan) o.plan = p.plan; if (p.fin) o.abonnement_fin = p.fin; if (p.verif) o.statut_verification = p.verif;
+      if (p.actif != null) o.actif = p.actif; if (p.type) o.type_structure = p.type; if (p.plan) o.plan = p.plan; if (p.fin) o.abonnement_fin = p.fin; if (p.verif) o.statut_verification = p.verif;
       D.ecrire(db); return att(true);
     };
     DV.supprimerClient = function (id) {
@@ -133,8 +135,16 @@
     profil: moi
   };
   DV.clients = async function () { return ok(await sb.rpc('dev_liste_organisations')); };
-  DV.creerClient = function (b) { return fonction('creer-organisation', b); };
-  DV.majClient = async function (id, p) { ok(await sb.rpc('dev_maj_organisation', { p_org: id, p_actif: p.actif == null ? null : p.actif, p_plan: p.plan || null, p_fin: p.fin || null, p_verif: p.verif || null })); return true; };
+  DV.creerClient = async function (b) {
+    var r = await fonction('creer-organisation', b);
+    if (b.type_structure && r && r.organisation) ok(await sb.rpc('dev_maj_type', { p_org: r.organisation.id, p_type: b.type_structure }));
+    return r;
+  };
+  DV.majClient = async function (id, p) {
+    if (p.type) ok(await sb.rpc('dev_maj_type', { p_org: id, p_type: p.type }));
+    ok(await sb.rpc('dev_maj_organisation', { p_org: id, p_actif: p.actif == null ? null : p.actif, p_plan: p.plan || null, p_fin: p.fin || null, p_verif: p.verif || null }));
+    return true;
+  };
   DV.supprimerClient = function (id) { return fonction('supprimer-organisation', { orgId: id }); };
   DV.inspecter = async function (id) {
     ok(await sb.rpc('dev_journaliser_consultation', { p_org: id }));
