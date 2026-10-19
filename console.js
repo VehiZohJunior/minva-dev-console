@@ -5,7 +5,7 @@
   var O = window.MVO, DV = window.DV, esc = O.esc, ico = O.ico;
   var racine = document.getElementById('racine');
   var S = { moi: null, clients: [], demandes: [], docs: [], erreurs: [], activite: [], filtre: '', statut: 'tous', inspection: null };
-  var TARIFS = { essentiel: 'Essentiel', organisation: 'Organisation', reseau: 'Réseau' };
+  var TARIFS = { essentiel: 'Essentiel', organisation: 'Organisation', reseau: 'Réseau', institution: 'Institution' };
   var ONGLETS = [['veille', 'Veille technique', 'graph'], ['clients', 'Clients', 'boite'], ['demandes', 'Demandes', 'envoi'], ['documents', 'Documents à vérifier', 'rapport'], ['erreurs', 'Erreurs', 'alerte']];
 
   function page() { var h = location.hash.slice(1); return ONGLETS.some(function (o) { return o[0] === h; }) || h === 'inspection' ? h : 'veille'; }
@@ -98,7 +98,7 @@
     var acces = S.clients.filter(function (x) { return x.acces_support_actif; });
     var err24 = S.erreurs.filter(function (e) { return O.joursDepuis(e.created_at) < 1; }).length;
     var nouvelles = S.demandes.filter(function (d) { return d.statut === 'nouvelle'; }).length;
-    var mrr = actifs.reduce(function (t, x) { var p = { essentiel: 6000, organisation: 12000, reseau: 25000 }[x.plan] || 0; return t + p; }, 0);
+    var mrr = actifs.reduce(function (t, x) { var p = { essentiel: 6000, organisation: 12000, reseau: 25000, institution: 50000 }[x.plan] || 0; return t + p; }, 0);
 
     var surv = [];
     expires.forEach(function (x) { surv.push(['alerte', '<b>' + esc(x.nom) + '</b> : abonnement expiré depuis ' + Math.abs(joursRestants(x.abonnement_fin)) + ' j', 'Relancer le paiement ou suspendre depuis Clients.']); });
